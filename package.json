@@ -1,1 +1,1 @@
-{"name":"maksabi","private":true,"type":"module","scripts":{"test":"node tests/insights.test.mjs"}}
+{"name":"maksabi","private":true,"type":"module","scripts":{"test":"node tests/insights.test.mjs && node tests/dashboard.test.mjs"}}
