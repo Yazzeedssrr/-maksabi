@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {dashboardModel,aiContext,lastNDates} from '../lib/dashboard.js';
+const now=new Date(2026,8,16,18,0,0);
+const data={entries:[{date:'2026-09-16',type:'income',amount:240},{date:'2026-09-16',type:'expense',amount:45}],trips:[{date:'2026-09-16',miles:220,hours:9}],settings:{dailyGoal:200}};
+const m=dashboardModel(data,now);
+assert.equal(m.today,'2026-09-16');
+assert.equal(m.cards.net,195);
+assert.equal(m.cards.goalRemaining,5);
+assert.ok(m.brief.some(x=>x.includes('باقي $5.00')));
+assert.equal(m.next.kind,'goal_plan');
+assert.equal(lastNDates(7,now).length,7);
+const c=aiContext(data,now);
+assert.equal(c.todaySummary.net,195);
+assert.equal(c.last7Days.net,195);
+assert.equal(c.recentEntries.length,2);
+console.log('dashboard tests passed');
