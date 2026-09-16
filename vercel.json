@@ -1,10 +1,16 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/v4.html" }
+    { "source": "/", "destination": "/v5.html" }
   ],
   "headers": [
     {
       "source": "/",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" }
+      ]
+    },
+    {
+      "source": "/v5.html",
       "headers": [
         { "key": "Cache-Control", "value": "no-store, max-age=0" }
       ]
