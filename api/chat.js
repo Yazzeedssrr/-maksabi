@@ -1,3 +1,15 @@
+const obj=properties=>({type:'object',properties,required:Object.keys(properties),additionalProperties:false});
+const str={type:'string'},num={type:'number'},optional=t=>({type:[t,'null']});
+const variant=(type,payload)=>obj({type:{type:'string',enum:[type]},payload:obj(payload)});
+const settings={dailyGoal:optional('number'),bills:optional('number'),saving:optional('number'),carPerMile:optional('number')};
+const schema=obj({reply:str,actions:{type:'array',items:{anyOf:[
+ variant('add_entry',{type:{type:'string',enum:['income','expense']},amount:num,source:str,note:str,date:optional('string')}),
+ variant('add_trip',{miles:num,hours:num,source:str,note:str,date:optional('string')}),
+ variant('update_settings',settings),
+ variant('update_entry',{id:num,patch:obj({type:{type:['string','null'],enum:['income','expense',null]},amount:optional('number'),source:optional('string'),note:optional('string')})}),
+ variant('delete_entry',{id:num})
+ ]}}});
+const nonNull=x=>Object.fromEntries(Object.entries(x||{}).filter(([,v])=>v!==null));
 export default async function handler(req,res){
   if(req.method!=="POST") return res.status(405).json({error:"Method not allowed"});
   if(!process.env.OPENAI_API_KEY) return res.status(500).json({error:"OPENAI_API_KEY is not configured"});
@@ -26,7 +38,7 @@ For questions asking what should be changed in the app, you may explain or sugge
     const userContent=[{type:"input_text",text:`Current Maksabi app data (use when relevant):\n${JSON.stringify(context||{})}\n\nUser request:\n${String(message||"").slice(0,12000)}`}];
     for(const image_url of safeImages) userContent.push({type:"input_image",image_url});
     const input=[{role:"system",content:system},...safeHistory,{role:"user",content:userContent}];
-    const r=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${process.env.OPENAI_API_KEY}`},body:JSON.stringify({model:"gpt-5.6-luna",input,text:{format:{type:'json_object'}},max_output_tokens:5000})});
+    const r=await fetch("https://api.openai.com/v1/responses",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${process.env.OPENAI_API_KEY}`},body:JSON.stringify({model:"gpt-5.6-luna",input,text:{format:{type:'json_schema',name:'maksabi_actions',strict:true,schema}},max_output_tokens:5000})});
     const data=await r.json();
     if(!r.ok){console.error("OpenAI error",data?.error?.message||r.status);return res.status(502).json({error:"AI service error"});}
     let text=data.output_text;
@@ -38,8 +50,9 @@ For questions asking what should be changed in the app, you may explain or sugge
     const knownEntries=new Set((context?.recentEntries||[]).map(x=>Number(x.id)).filter(Number.isFinite));
     const actions=[];
     for(const a of raw.slice(0,10)){
-      if(!a||typeof a!=="object") continue;const p=a.payload||{};
-      if(p.date && (!/^\\d{4}-\\d{2}-\\d{2}$/.test(p.date) || Number.isNaN(Date.parse(p.date)))) return res.status(422).json({error:'Invalid date'});
+      if(!a||typeof a!=="object") continue;const p=nonNull(a.payload);
+      if(p.patch)p.patch=nonNull(p.patch);
+      if(p.date && (!/^\d{4}-\d{2}-\d{2}$/.test(p.date) || Number.isNaN(Date.parse(p.date)) || new Date(p.date+'T12:00:00Z').toISOString().slice(0,10)!==p.date)) return res.status(422).json({error:'Invalid date'});
       const dated=p.date?{date:p.date}:{};
       if(a.type==="add_entry"&&(p.type==="income"||p.type==="expense")&&Number.isFinite(Number(p.amount))&&Number(p.amount)>0) actions.push({type:"add_entry",payload:{...dated,type:p.type,amount:Number(p.amount),source:String(p.source||"أخرى").slice(0,80),note:String(p.note||"").slice(0,240)}});
       else if(a.type==="update_settings"){const clean={};for(const k of ["dailyGoal","bills","saving","carPerMile"])if(p[k]!==undefined&&Number.isFinite(Number(p[k]))&&Number(p[k])>=0)clean[k]=Number(p[k]);if(Object.keys(clean).length)actions.push({type:"update_settings",payload:clean});}
