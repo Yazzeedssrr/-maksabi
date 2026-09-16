@@ -1,0 +1,30 @@
+name: install-v9-ui
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/upgrade-v9.mjs'
+      - 'ui-v9.js'
+      - '.github/workflows/upgrade-v9-ui.yml'
+permissions:
+  contents: write
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/upgrade-v9.mjs
+      - name: Commit generated index
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "No index changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "feat(v9): install proactive dashboard UI [skip ci]"
+          git push
