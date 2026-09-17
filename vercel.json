@@ -1,9 +1,10 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/v7-7.html" }
+    { "source": "/", "destination": "/v7-8.html" }
   ],
   "headers": [
     { "source": "/", "headers": [{ "key": "Cache-Control", "value": "no-store, max-age=0" }] },
+    { "source": "/v7-8.html", "headers": [{ "key": "Cache-Control", "value": "no-store, max-age=0" }] },
     { "source": "/v7-7.html", "headers": [{ "key": "Cache-Control", "value": "no-store, max-age=0" }] },
     { "source": "/v7-6.html", "headers": [{ "key": "Cache-Control", "value": "no-store, max-age=0" }] },
     { "source": "/v7-5.html", "headers": [{ "key": "Cache-Control", "value": "no-store, max-age=0" }] },
