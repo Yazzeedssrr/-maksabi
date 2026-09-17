@@ -2,39 +2,26 @@
 const $=id=>document.getElementById(id);
 const incomeSources=['Amazon Flex','DoorDash','Uber','Lyft','وظيفة/راتب','بيع','عمل حر','دخل آخر'];
 const expenseCats=['بنزين','طعام أثناء العمل','صيانة','زيت','إطارات','غسيل سيارة','رسوم طرق/مواقف','تأمين','قسط سيارة','هاتف','مشتريات للعمل','مصروف شخصي','مصروف آخر'];
+const workSources=['Amazon Flex','DoorDash','Uber','Lyft','عمل آخر'];
 function today(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0')}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function build(){const section=$('records');if(!section||$('entryUpgradeCard'))return;const old=$('entryType')?.closest('.card');if(!old)return;old.id='entryUpgradeCard';old.innerHTML=`
-<h3>إضافة حركة</h3>
-<div class="row"><select id="entryType"><option value="income">دخل</option><option value="expense">مصروف</option></select><input id="entryAmount" inputmode="decimal" placeholder="المبلغ"></div>
-<div id="incomeFields">
-<label>مصدر الدخل</label><select id="incomeSource">${incomeSources.map(x=>`<option>${esc(x)}</option>`).join('')}<option value="__custom">+ مصدر جديد</option></select>
-<input id="incomeSourceCustom" class="hide" placeholder="اكتب مصدر الدخل الجديد">
-</div>
-<div id="expenseFields" class="hide">
-<label>نوع المصروف</label><select id="expenseCategory">${expenseCats.map(x=>`<option>${esc(x)}</option>`).join('')}<option value="__custom">+ نوع مصروف جديد</option></select>
-<input id="expenseCategoryCustom" class="hide" placeholder="اكتب نوع المصروف الجديد">
-<label>مرتبط بأي عمل؟</label><select id="expenseWork"><option value="عام">السيارة/عام</option>${incomeSources.slice(0,4).map(x=>`<option>${esc(x)}</option>`).join('')}<option value="شخصي">شخصي</option><option value="__custom">+ عمل آخر</option></select>
-<input id="expenseWorkCustom" class="hide" placeholder="اكتب العمل المرتبط بالمصروف">
-</div>
-<label>التاريخ</label><input id="entryDate" type="date" value="${today()}">
-<button id="toggleEntryDetails" class="secondary wide" type="button">تفاصيل أكثر</button>
-<div id="entryDetails" class="hide">
-<div class="row"><input id="entryHours" inputmode="decimal" placeholder="ساعات العمل"><input id="entryMiles" inputmode="decimal" placeholder="الميلات"></div>
-<input id="entryPlace" placeholder="المحطة / المنطقة / الموقع">
-<input id="entryNote" placeholder="ملاحظة">
-</div>
-<button id="addEntryBtn" class="primary wide">إضافة</button>
-<small class="muted">الدخل والمصروف يُصنفان حسب المصدر حتى يستطيع مكسبي حساب الربح الحقيقي لكل عمل.</small>`;
-const type=$('entryType'),income=$('incomeFields'),expense=$('expenseFields');
-function sync(){const inc=type.value==='income';income.classList.toggle('hide',!inc);expense.classList.toggle('hide',inc)}
-type.onchange=sync;sync();
-$('toggleEntryDetails').onclick=()=>{$('entryDetails').classList.toggle('hide');$('toggleEntryDetails').textContent=$('entryDetails').classList.contains('hide')?'تفاصيل أكثر':'إخفاء التفاصيل'};
-for(const [sel,input] of [['incomeSource','incomeSourceCustom'],['expenseCategory','expenseCategoryCustom'],['expenseWork','expenseWorkCustom']])$(sel).onchange=()=>$(input).classList.toggle('hide',$(sel).value!=='__custom');
-$('addEntryBtn').addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();const amount=+$('entryAmount').value;if(!(amount>0))return toast('أدخل مبلغًا صحيحًا');const isIncome=$('entryType').value==='income';let source;if(isIncome){source=$('incomeSource').value==='__custom'?$('incomeSourceCustom').value.trim():$('incomeSource').value;if(!source)return toast('اختر أو اكتب مصدر الدخل');}else{const cat=$('expenseCategory').value==='__custom'?$('expenseCategoryCustom').value.trim():$('expenseCategory').value;let work=$('expenseWork').value==='__custom'?$('expenseWorkCustom').value.trim():$('expenseWork').value;if(!cat)return toast('اختر نوع المصروف');source=cat+(work&&work!=='عام'?' • '+work:'');}
-const date=$('entryDate').value||today(),hours=+$('entryHours').value||0,miles=+$('entryMiles').value||0,place=$('entryPlace').value.trim(),note=$('entryNote').value.trim();const details=[];if(hours>0)details.push('ساعات: '+hours);if(miles>0)details.push('ميلات: '+miles);if(place)details.push('مكان: '+place);if(note)details.push(note);
-d.entries.unshift({id:Date.now(),date,type:isIncome?'income':'expense',amount,source,note:details.join(' • '),hours,miles,place});save();$('entryAmount').value='';$('entryHours').value='';$('entryMiles').value='';$('entryPlace').value='';$('entryNote').value='';render();toast('تمت الإضافة');
-},true);
-}
+function optionList(a){return a.map(x=>`<option>${esc(x)}</option>`).join('')}
+function build(){const section=$('records');if(!section||$('activityCenter'))return;const old=$('entryType')?.closest('.card');if(!old)return;old.id='activityCenter';old.innerHTML=`
+<h3>＋ ماذا تريد تسجيله؟</h3><p class="muted">اختر الحركة كما حدثت فعلًا؛ مكسبي سيحسب الدخل والمصروف فقط ضمن الربح، ويحفظ بقية الحركات منفصلة.</p>
+<div class="activityKinds" id="activityKinds"><button type="button" data-kind="income" class="primary">💵 دخل</button><button type="button" data-kind="expense" class="secondary">💸 مصروف</button><button type="button" data-kind="work" class="secondary">🚗 عمل/شِفت</button><button type="button" data-kind="transfer" class="secondary">⇄ تحويل</button><button type="button" data-kind="debt" class="secondary">🤝 دين</button><button type="button" data-kind="bill" class="secondary">🧾 فاتورة</button><button type="button" data-kind="refund" class="secondary">↩ استرداد</button><button type="button" data-kind="saving" class="secondary">🏦 ادخار</button><button type="button" data-kind="balance" class="secondary">⚖️ تعديل رصيد</button></div>
+<input id="activityKind" type="hidden" value="income"><div id="activityForm"></div>`;
+const host=$('activityForm');
+function commonDate(){return `<label>التاريخ</label><input id="acDate" type="date" value="${today()}">`}
+function renderForm(kind){$('activityKind').value=kind;document.querySelectorAll('#activityKinds button').forEach(b=>{b.className=b.dataset.kind===kind?'primary':'secondary'});
+if(kind==='income')host.innerHTML=`<label>المبلغ</label><input id="acAmount" inputmode="decimal" placeholder="$0.00"><label>مصدر الدخل</label><select id="acSource">${optionList(incomeSources)}<option value="__custom">+ مصدر جديد</option></select><input id="acCustom" class="hide" placeholder="اكتب المصدر الجديد">${commonDate()}<button id="acDetailsBtn" class="secondary wide" type="button">تفاصيل أكثر</button><div id="acDetails" class="hide"><div class="row"><input id="acHours" inputmode="decimal" placeholder="الساعات"><input id="acMiles" inputmode="decimal" placeholder="الميلات"></div><input id="acPlace" placeholder="المحطة / المنطقة"><input id="acNote" placeholder="ملاحظة"></div><button id="acSave" class="primary wide">حفظ الدخل</button>`;
+else if(kind==='expense')host.innerHTML=`<label>المبلغ</label><input id="acAmount" inputmode="decimal" placeholder="$0.00"><label>نوع المصروف</label><select id="acSource">${optionList(expenseCats)}<option value="__custom">+ نوع جديد</option></select><input id="acCustom" class="hide" placeholder="اكتب نوع المصروف"><label>مرتبط بأي عمل؟</label><select id="acWork"><option>عام/السيارة</option>${optionList(workSources)}<option>شخصي</option></select>${commonDate()}<input id="acNote" placeholder="ملاحظة"><button id="acSave" class="primary wide">حفظ المصروف</button>`;
+else if(kind==='work')host.innerHTML=`<label>مصدر العمل</label><select id="acSource">${optionList(workSources)}</select>${commonDate()}<div class="row"><input id="acHours" inputmode="decimal" placeholder="الساعات"><input id="acMiles" inputmode="decimal" placeholder="الميلات"></div><input id="acNote" placeholder="ملاحظة"><button id="acSave" class="primary wide">حفظ العمل</button><small class="muted">للـGPS المباشر استخدم قسم العمل والميلات.</small>`;
+else {const labels={transfer:['تحويل','من حساب / مكان','إلى حساب / مكان'],debt:['دين','الشخص / الجهة','لك أم عليك؟'],bill:['فاتورة','اسم الفاتورة','الحالة / الاستحقاق'],refund:['استرداد','مصدر الاسترداد','سبب الاسترداد'],saving:['ادخار','هدف الادخار','الحساب / المكان'],balance:['تعديل رصيد','الحساب','سبب التعديل']}[kind];host.innerHTML=`<label>المبلغ</label><input id="acAmount" inputmode="decimal" placeholder="$0.00"><label>${labels[1]}</label><input id="acSource" placeholder="${labels[1]}"><label>${labels[2]}</label><input id="acExtra" placeholder="${labels[2]}">${commonDate()}<input id="acNote" placeholder="ملاحظة"><button id="acSave" class="primary wide">حفظ ${labels[0]}</button><small class="muted">هذه الحركة تحفظ منفصلة ولا تُحسب تلقائيًا كدخل أو مصروف.</small>`;}
+if($('acSource')?.tagName==='SELECT'&&$('acCustom'))$('acSource').onchange=()=>$('acCustom').classList.toggle('hide',$('acSource').value!=='__custom');if($('acDetailsBtn'))$('acDetailsBtn').onclick=()=>{$('acDetails').classList.toggle('hide');$('acDetailsBtn').textContent=$('acDetails').classList.contains('hide')?'تفاصيل أكثر':'إخفاء التفاصيل'};$('acSave').onclick=saveActivity;}
+function saveActivity(){const kind=$('activityKind').value,date=$('acDate')?.value||today(),amount=+$('acAmount')?.value||0,note=$('acNote')?.value.trim()||'';if(kind!=='work'&&!(amount>0))return toast('أدخل مبلغًا صحيحًا');let source=$('acSource')?.value||'';if(source==='__custom')source=$('acCustom')?.value.trim()||'';if(!source)return toast('أدخل المصدر أو الجهة');if(kind==='income'||kind==='expense'){if(kind==='expense'&&$('acWork'))source+=' • '+$('acWork').value;const hours=+$('acHours')?.value||0,miles=+$('acMiles')?.value||0,place=$('acPlace')?.value.trim()||'';const parts=[note];if(hours)parts.push('ساعات: '+hours);if(miles)parts.push('ميلات: '+miles);if(place)parts.push('مكان: '+place);d.entries.unshift({id:Date.now(),date,type:kind,amount,source,note:parts.filter(Boolean).join(' • '),hours,miles,place});}
+else if(kind==='work'){const hours=+$('acHours')?.value||0,miles=+$('acMiles')?.value||0;if(!(hours>0||miles>0))return toast('أدخل الساعات أو الميلات');d.trips.unshift({id:Date.now(),date,source,hours,miles,note});}
+else{d.activities=Array.isArray(d.activities)?d.activities:[];d.activities.unshift({id:Date.now(),date,kind,amount,source,extra:$('acExtra')?.value.trim()||'',note});}
+save();render();toast('تم الحفظ');renderForm(kind);}
+document.querySelectorAll('#activityKinds button').forEach(b=>b.onclick=()=>renderForm(b.dataset.kind));renderForm('income');}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(build,0));else setTimeout(build,0);
 })();
