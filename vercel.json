@@ -1,25 +1,12 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/index.html" }
-  ],
+  "rewrites": [{"source":"/","destination":"/v8.html"}],
   "headers": [
-    {
-      "source": "/",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0" }
-      ]
-    },
-    {
-      "source": "/index.html",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0" }
-      ]
-    },
-    {
-      "source": "/v5.html",
-      "headers": [
-        { "key": "Cache-Control", "value": "no-store, max-age=0" }
-      ]
-    }
+    {"source":"/","headers":[{"key":"Cache-Control","value":"no-store, max-age=0"}]},
+    {"source":"/v8.html","headers":[{"key":"Cache-Control","value":"no-store, max-age=0"}]},
+    {"source":"/v8.js","headers":[{"key":"Cache-Control","value":"no-store, max-age=0"}]},
+    {"source":"/v8-(.*).js","headers":[{"key":"Cache-Control","value":"no-store, max-age=0"}]},
+    {"source":"/sw.js","headers":[{"key":"Cache-Control","value":"no-store, max-age=0"}]},
+    {"source":"/v8.css","headers":[{"key":"Cache-Control","value":"no-store, max-age=0"}]},
+    {"source":"/api/(.*)","headers":[{"key":"Cache-Control","value":"no-store, max-age=0"}]}
   ]
 }
